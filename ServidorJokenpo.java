@@ -83,8 +83,6 @@ class Jogo implements Runnable {
     @Override
     public void run() {
 
-        // Aqui faz a separação se é um jogo VsCpu ou JogadorxJogador
-
         if(this.entradaVsCpu != null && this.saidaVsCpu != null){
 
                 int vitorias = 0;
@@ -136,8 +134,7 @@ class Jogo implements Runnable {
                 jogador2In = new BufferedReader(new InputStreamReader(jogador2Socket.getInputStream()));
                 jogador2Out = new PrintWriter(jogador2Socket.getOutputStream(), true);
 
-                // V,D,E
-                //Ex: [[0,0,0],[0,0,0]] - Jogador 1 Indice 0 / Jogador 2 Indice 1
+            
                 int[][] placar = new int[2][3];
 
 
@@ -147,7 +144,6 @@ class Jogo implements Runnable {
                     String escolhaJogador1 = jogador1In.readLine();
 
                     if ("sair".equalsIgnoreCase(escolhaJogador1)) {
-                        // desconeta os dois jogados;
                         jogador1Socket.close();
                         jogador2Out.println("O Jogador 1 saiu do jogo!");
                         jogador2Socket.close();
@@ -159,8 +155,7 @@ class Jogo implements Runnable {
                     jogador1Out.println("Esperando o Jogador 2 jogar!");
                     String escolhaJogador2 = jogador2In.readLine();
 
-                    if ("sair".equalsIgnoreCase(escolhaJogador2)) {
-                        // desconeta os dois jogados;
+                    if ("sair".equalsIgnoreCase(escolhaJogador2)) 
                         jogador2Socket.close();
                         jogador1Out.println("O Jogador 2 saiu do jogo!");
                         jogador1Socket.close();
