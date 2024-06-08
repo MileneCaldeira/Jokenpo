@@ -13,26 +13,17 @@ public class ClienteJokenpo {
 
 
             String retornoServidor = entrada.readLine();
+            System.out.println(retornoServidor);
+            String modo = leitorConsole.readLine();
+            saida.println(modo);
 
-            if(retornoServidor.contains("Modo Jogador vs Jogador")){
+            if ("1".equals(modo)) {
+                jogarContraCPU(entrada, saida, leitorConsole);
+            } else if ("2".equals(modo)) {
                 jogarContraJogador(entrada, saida, leitorConsole);
-            }else{
-                System.out.println(retornoServidor);
-                String modo = leitorConsole.readLine();
-                saida.println(modo);
-
-
-                if ("1".equals(modo)) {
-                    jogarContraCPU(entrada, saida, leitorConsole);
-                } else if ("2".equals(modo)) {
-                    jogarContraJogador(entrada, saida, leitorConsole);
-                } else {
-                    System.out.println("Modo inválido.");
-                }
-
+            } else {
+                System.out.println("Modo inválido.");
             }
-
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -58,13 +49,12 @@ public class ClienteJokenpo {
 
         String escolha = "";
         while (!escolha.trim().contains("sair")) {
-            String mensagemServidor = mensagemServidor = mensagemServidor = entrada.readLine();
+            String mensagemServidor = entrada.readLine();
 
             if(mensagemServidor == null){
                 break;
             }
 
-            //ignorar espaçoes vazios;
             if(!mensagemServidor.isEmpty()){
                 System.out.println(mensagemServidor);
             }
@@ -94,8 +84,6 @@ public class ClienteJokenpo {
                 }
                 System.out.println(resultado);
             }
-
-
         }
     }
 
