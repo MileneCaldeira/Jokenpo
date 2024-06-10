@@ -1,3 +1,5 @@
+package principal;
+
 import java.io.*;
 import java.net.*;
 import java.util.Random;
@@ -7,46 +9,60 @@ public class ServidorJokenpo {
 
     public static void main(String[] args) {
         int porta = obterPorta();
-
+    
         try {
             servidorSocket = new ServerSocket(porta);
             System.out.println("Servidor Jokenpô iniciado na porta " + porta);
-
+    
             while (true) {
-                Socket clienteSocket = servidorSocket.accept();
-                PrintWriter saida = new PrintWriter(clienteSocket.getOutputStream(), true);
-                BufferedReader entrada = new BufferedReader(new InputStreamReader(clienteSocket.getInputStream()));
-                saida.println("Escolha o modo de jogo: 1 - Jogador vs CPU, 2 - Jogador vs Jogador");
-                String modo = entrada.readLine();
-
-                if ("1".equals(modo)) {
-                    jogadorVsCPU(entrada, saida);
-                } else if ("2".equals(modo)) {
-                    saida.println("Aguardando outro jogador...");
+                Socket jogador1Socket = servidorSocket.accept();
+                PrintWriter saidaJogador1 = new PrintWriter(jogador1Socket.getOutputStream(), true);
+                BufferedReader entradaJogador1 = new BufferedReader(new InputStreamReader(jogador1Socket.getInputStream()));
+    
+                saidaJogador1.println("Escolha o modo de jogo: 1 - Jogador vs CPU, 2 - Jogador vs Jogador");
+                String modoJogador1 = entradaJogador1.readLine();
+    
+                if ("1".equals(modoJogador1)) {
+                    new Thread(() -> {
+                        try {
+                            jogadorVsCPU(entradaJogador1, saidaJogador1);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                } else if ("2".equals(modoJogador1)) {
+                    saidaJogador1.println("Aguardando outro jogador...");
                     Socket jogador2Socket = servidorSocket.accept();
                     PrintWriter saidaJogador2 = new PrintWriter(jogador2Socket.getOutputStream(), true);
                     BufferedReader entradaJogador2 = new BufferedReader(new InputStreamReader(jogador2Socket.getInputStream()));
-
+    
                     saidaJogador2.println("Escolha o modo de jogo: 1 - Jogador vs CPU, 2 - Jogador vs Jogador");
                     String modoJogador2 = entradaJogador2.readLine();
-
+    
                     if ("1".equals(modoJogador2)) {
-                        jogadorVsCPU(entradaJogador2, saidaJogador2);
+                        new Thread(() -> {
+                            try {
+                                jogadorVsCPU(entradaJogador2, saidaJogador2);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
                     } else if ("2".equals(modoJogador2)) {
-                        saida.println("Outro jogador conectado. Iniciando o jogo...");
+                        saidaJogador1.println("Outro jogador conectado. Iniciando o jogo...");
                         saidaJogador2.println("Outro jogador conectado. Iniciando o jogo...");
-                        new Thread(new Jogo(clienteSocket, jogador2Socket)).start();
+                        new Thread(new Jogo(jogador1Socket, jogador2Socket)).start();
                     } else {
                         saidaJogador2.println("Modo inválido.");
                     }
                 } else {
-                    saida.println("Modo inválido.");
+                    saidaJogador1.println("Modo inválido.");
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    
 
     private static void jogadorVsCPU(BufferedReader entrada, PrintWriter saida) throws IOException {
         int vitorias = 0;
@@ -160,44 +176,45 @@ class Jogo implements Runnable {
                     jogador1Out.println("O Jogador 2 saiu do jogo!");
                     break;
                 }
-
-                int escolha1;
-                int escolha2;
-
+                    
+                
+                int escolhaJogador1Int;
                 try {
-                    escolha1 = Integer.parseInt(escolhaJogador1);
-                    escolha2 = Integer.parseInt(escolhaJogador2);
+                    escolhaJogador1Int = Integer.parseInt(escolhaJogador1);
                 } catch (NumberFormatException e) {
                     jogador1Out.println("Escolha inválida. Tente novamente.");
+                    continue;
+                }
+
+                int escolhaJogador2Int;
+                try {
+                    escolhaJogador2Int = Integer.parseInt(escolhaJogador2);
+                } catch (NumberFormatException e) {
                     jogador2Out.println("Escolha inválida. Tente novamente.");
                     continue;
                 }
 
-                int resultado = determinarVencedor(escolha1, escolha2);
-                String[] opcoes = {"Pedra", "Papel", "Tesoura"};
-
-                jogador1Out.println("O outro jogador escolheu: " + opcoes[escolha2 - 1]);
-                jogador2Out.println("O outro jogador escolheu: " + opcoes[escolha1 - 1]);
+                int resultado = determinarVencedor(escolhaJogador1Int, escolhaJogador2Int);
 
                 if (resultado == 0) {
-                    jogador1Out.println("Resultado: Empate!");
-                    jogador2Out.println("Resultado: Empate!");
                     placarJogador1[2]++;
                     placarJogador2[2]++;
+                    jogador1Out.println("Resultado: Empate!");
+                    jogador2Out.println("Resultado: Empate!");
                 } else if (resultado == 1) {
-                    jogador1Out.println("Resultado: Você ganhou!");
-                    jogador2Out.println("Resultado: Você perdeu!");
                     placarJogador1[0]++;
                     placarJogador2[1]++;
+                    jogador1Out.println("Resultado: Jogador 1 ganhou!");
+                    jogador2Out.println("Resultado: Jogador 1 ganhou!");
                 } else {
-                    jogador1Out.println("Resultado: Você perdeu!");
-                    jogador2Out.println("Resultado: Você ganhou!");
                     placarJogador1[1]++;
                     placarJogador2[0]++;
+                    jogador1Out.println("Resultado: Jogador 2 ganhou!");
+                    jogador2Out.println("Resultado: Jogador 2 ganhou!");
                 }
 
-                jogador1Out.println("Vitórias: " + placarJogador1[0] + " | Derrotas: " + placarJogador1[1] + " | Empates: " + placarJogador1[2]);
-                jogador2Out.println("Vitórias: " + placarJogador2[0] + " | Derrotas: " + placarJogador2[1] + " | Empates: " + placarJogador2[2]);
+                jogador1Out.println("Placar - Vitórias: " + placarJogador1[0] + " | Derrotas: " + placarJogador1[1] + " | Empates: " + placarJogador1[2]);
+                jogador2Out.println("Placar - Vitórias: " + placarJogador2[0] + " | Derrotas: " + placarJogador2[1] + " | Empates: " + placarJogador2[2]);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -213,7 +230,7 @@ class Jogo implements Runnable {
 
     private int determinarVencedor(int jogador1, int jogador2) {
         if (jogador1 == jogador2) {
-            return 0; // Empate
+            return 0;
         } else if ((jogador1 == 1 && jogador2 == 3) ||
                 (jogador1 == 2 && jogador2 == 1) ||
                 (jogador1 == 3 && jogador2 == 2)) {
@@ -223,3 +240,4 @@ class Jogo implements Runnable {
         }
     }
 }
+
