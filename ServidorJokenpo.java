@@ -1,65 +1,64 @@
+
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class ServidorJokenpo {
     private static ServerSocket servidorSocket;
 
-    public static void main(String[] args) {
-        int porta = obterPorta();
-    
-        try {
-            servidorSocket = new ServerSocket(porta);
-            System.out.println("Servidor Jokenpô iniciado na porta " + porta);
-    
-            while (true) {
-                Socket jogador1Socket = servidorSocket.accept();
-                PrintWriter saidaJogador1 = new PrintWriter(jogador1Socket.getOutputStream(), true);
-                BufferedReader entradaJogador1 = new BufferedReader(new InputStreamReader(jogador1Socket.getInputStream()));
-    
-                saidaJogador1.println("Escolha o modo de jogo: 1 - Jogador vs CPU, 2 - Jogador vs Jogador");
-                String modoJogador1 = entradaJogador1.readLine();
-    
-                if ("1".equals(modoJogador1)) {
-                    new Thread(() -> {
-                        try {
-                            jogadorVsCPU(entradaJogador1, saidaJogador1);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }).start();
-                } else if ("2".equals(modoJogador1)) {
-                    saidaJogador1.println("Aguardando outro jogador...");
-                    Socket jogador2Socket = servidorSocket.accept();
-                    PrintWriter saidaJogador2 = new PrintWriter(jogador2Socket.getOutputStream(), true);
-                    BufferedReader entradaJogador2 = new BufferedReader(new InputStreamReader(jogador2Socket.getInputStream()));
-    
-                    saidaJogador2.println("Escolha o modo de jogo: 1 - Jogador vs CPU, 2 - Jogador vs Jogador");
-                    String modoJogador2 = entradaJogador2.readLine();
-    
-                    if ("1".equals(modoJogador2)) {
-                        new Thread(() -> {
-                            try {
-                                jogadorVsCPU(entradaJogador2, saidaJogador2);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }).start();
-                    } else if ("2".equals(modoJogador2)) {
-                        saidaJogador1.println("Outro jogador conectado. Iniciando o jogo...");
-                        saidaJogador2.println("Outro jogador conectado. Iniciando o jogo...");
-                        new Thread(new Jogo(jogador1Socket, jogador2Socket)).start();
-                    } else {
-                        saidaJogador2.println("Modo inválido.");
+public static void main(String[] args) {
+    int porta = obterPorta();
+
+    try {
+        servidorSocket = new ServerSocket(porta);
+        System.out.println("Servidor Jokenpô iniciado na porta " + porta);
+
+        List<Socket> jogadoresPendentes = new ArrayList<>();
+
+        while (true) {
+            Socket jogadorSocket = servidorSocket.accept();
+            PrintWriter saidaJogador = new PrintWriter(jogadorSocket.getOutputStream(), true);
+            BufferedReader entradaJogador = new BufferedReader(new InputStreamReader(jogadorSocket.getInputStream()));
+
+            saidaJogador.println("Escolha o modo de jogo: 1 - Jogador vs CPU, 2 - Jogador vs Jogador");
+            String modoJogador = entradaJogador.readLine();
+
+            if ("1".equals(modoJogador)) {
+                new Thread(() -> {
+                    try {
+                        jogadorVsCPU(entradaJogador, saidaJogador);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+                }).start();
+            } else if ("2".equals(modoJogador)) {
+                jogadoresPendentes.add(jogadorSocket);
+
+                if (jogadoresPendentes.size() >= 2) {
+                    Socket jogador1Socket = jogadoresPendentes.remove(0);
+                    Socket jogador2Socket = jogadoresPendentes.remove(0);
+
+                    PrintWriter saidaJogador1 = new PrintWriter(jogador1Socket.getOutputStream(), true);
+                    PrintWriter saidaJogador2 = new PrintWriter(jogador2Socket.getOutputStream(), true);
+
+                    saidaJogador1.println("Outro jogador conectado. Iniciando o jogo...");
+                    saidaJogador2.println("Outro jogador conectado. Iniciando o jogo...");
+
+                    new Thread(new Jogo(jogador1Socket, jogador2Socket)).start();
                 } else {
-                    saidaJogador1.println("Modo inválido.");
+                    saidaJogador.println("Aguardando outro jogador...");
                 }
+            } else {
+                saidaJogador.println("Modo inválido.");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+}
+
     
 
     private static void jogadorVsCPU(BufferedReader entrada, PrintWriter saida) throws IOException {
@@ -238,4 +237,3 @@ class Jogo implements Runnable {
         }
     }
 }
-
