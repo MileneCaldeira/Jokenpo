@@ -1,3 +1,5 @@
+package principal;
+
 import java.io.*;
 import java.net.*;
 
@@ -32,6 +34,8 @@ public class ClienteJokenpo {
 
             }
 
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -58,10 +62,12 @@ public class ClienteJokenpo {
         while (!escolha.trim().contains("sair")) {
             String mensagemServidor = mensagemServidor = mensagemServidor = entrada.readLine();
 
+            // O Outro jogador saiu do jogo;
             if(mensagemServidor == null){
                 break;
             }
 
+            // Aqui vai ignorar espaçoes vazios;
             if(!mensagemServidor.isEmpty()){
                 System.out.println(mensagemServidor);
             }
@@ -70,6 +76,7 @@ public class ClienteJokenpo {
 
                 while(true){
                     try{
+                        //String escolha = leitorConsole.readLine();
                         escolha = leitorConsole.readLine();
                         if(escolha.trim().contains("sair")){
                             saida.println(escolha);
@@ -80,6 +87,7 @@ public class ClienteJokenpo {
                         saida.println(escolha);
                         break;
                     }catch (NumberFormatException e){
+                        //Aqui vai ignorar todas as opções invalidas;
                         continue;
                     }
 
